@@ -58,3 +58,23 @@ class ReLU:
 
 def relu(a):
     return Tensor(ReLU.forward(a), (a,), ReLU)
+
+
+class Mean:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(a):
+        return np.mean(a.elems)
+
+    @staticmethod
+    def backward(a, index):
+        if index != 0:
+            raise ValueError('invalid index specified')
+        return a.elems/a.elems.size
+
+
+def mean(a):
+    return Tensor(Mean.forward(a), (a,), Mean)

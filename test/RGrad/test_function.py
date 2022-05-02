@@ -2,7 +2,7 @@ from re import A
 import numpy as np
 
 from src.RGrad.tensor import Tensor
-from src.RGrad.function import Matmul, matmul, ReLU, relu
+from src.RGrad.function import Matmul, matmul, ReLU, relu, Mean, mean
 
 
 def test_matmul_forward():
@@ -41,8 +41,22 @@ def test_relu_forward():
     assert output_tensor.parents[0] is input_tensor
     assert output_tensor.function == ReLU
 
+
 def test_relu_backward():
     input_tensor = Tensor(np.array([1.5, 0, -1]))
-    output_tensor = relu(input_tensor)
     derriv_array = ReLU.backward(input_tensor, 0)
     assert np.allclose(derriv_array, np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]]))
+
+
+def test_mean_forward():
+    input_tensor = Tensor(np.array([[1, 2], [3, 4]], dtype=float))
+    output_tensor = mean(input_tensor)
+    assert np.isclose(output_tensor.elems, 2.5)
+    assert len(output_tensor.parents) == 1
+    assert output_tensor.parents[0] is input_tensor
+
+
+def test_mean_backward():
+    input_tensor = Tensor(np.array([[1, 2], [3, 4]]))
+    derriv_array = Mean.backward(input_tensor, 0)
+    assert np.allclose(derriv_array, np.array([[0.25, 0.5], [0.75, 1]]))
