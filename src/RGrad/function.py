@@ -73,7 +73,7 @@ class Mean:
     def backward(a, index):
         if index != 0:
             raise ValueError('invalid index specified')
-        return a.elems/a.elems.size
+        return np.ones(a.shape)/a.elems.size
 
 
 def mean(a):

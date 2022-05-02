@@ -59,4 +59,4 @@ def test_mean_forward():
 def test_mean_backward():
     input_tensor = Tensor(np.array([[1, 2], [3, 4]]))
     derriv_array = Mean.backward(input_tensor, 0)
-    assert np.allclose(derriv_array, np.array([[0.25, 0.5], [0.75, 1]]))
+    assert np.allclose(derriv_array, np.array([[0.25, 0.25], [0.25, 0.25]]))
