@@ -2,7 +2,8 @@ from re import A
 import numpy as np
 
 from src.RGrad.tensor import Tensor
-from src.RGrad.function import Matmul, matmul
+from src.RGrad.function import Matmul, matmul, ReLU, relu
+
 
 def test_matmul_forward():
     tensor_a = Tensor(np.array([[1, 2], [3, 4]], dtype=float))
@@ -30,3 +31,18 @@ def test_matmul_backward():
     assert np.allclose(a_derriv_array[0][1], np.array([[6, 8], [0, 0]], dtype=float))
     assert np.allclose(a_derriv_array[1][0], np.array([[0, 0], [5, 7]], dtype=float))
     assert np.allclose(a_derriv_array[1][1], np.array([[0, 0], [6, 8]], dtype=float))
+
+
+def test_relu_forward():
+    input_tensor = Tensor(np.array([1, -1, 0.5]))
+    output_tensor = relu(input_tensor)
+    np.allclose(output_tensor.elems, np.array([1, 0, 0.5]))
+    assert len(output_tensor.parents) == 1
+    assert output_tensor.parents[0] is input_tensor
+    assert output_tensor.function == ReLU
+
+def test_relu_backward():
+    input_tensor = Tensor(np.array([1.5, 0, -1]))
+    output_tensor = relu(input_tensor)
+    derriv_array = ReLU.backward(input_tensor, 0)
+    assert np.allclose(derriv_array, np.array([[1, 0, 0], [0, 0, 0], [0, 0, 0]]))

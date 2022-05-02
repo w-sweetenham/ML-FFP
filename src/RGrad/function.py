@@ -30,5 +30,31 @@ class Matmul:
             return b_derriv_array
         return
 
+
 def matmul(a, b):
     return Tensor(Matmul.forward(a, b), (a, b), Matmul)
+
+
+class ReLU:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(a):
+        return a.elems * (a.elems > 0)
+
+    @staticmethod
+    def backward(a, index):
+        if index != 0:
+            raise ValueError('invalid index specified')
+        result_size = list(a.shape)
+        derriv_array = np.zeros(result_size + result_size)
+        for index in np.ndindex(a.shape):
+            if a.elems[index] > 0:
+                derriv_array[index, index] = 1
+        return derriv_array
+
+
+def relu(a):
+    return Tensor(ReLU.forward(a), (a,), ReLU)
