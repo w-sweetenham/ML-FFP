@@ -1,8 +1,9 @@
 from re import A
 import numpy as np
+from torch import cross
 
 from src.RGrad.tensor import Tensor
-from src.RGrad.function import Matmul, matmul, ReLU, relu, Mean, mean
+from src.RGrad.function import Matmul, matmul, ReLU, relu, Mean, mean, cross_entropy, CrossEntropy, Linear
 
 
 def test_matmul_forward():
@@ -60,3 +61,35 @@ def test_mean_backward():
     input_tensor = Tensor(np.array([[1, 2], [3, 4]]))
     derriv_array = Mean.backward(input_tensor, 0)
     assert np.allclose(derriv_array, np.array([[0.25, 0.25], [0.25, 0.25]]))
+
+
+def test_cross_entropy_forward():
+    logits = Tensor(np.array([[1, 2], [5, 3], [3, 6]]))
+    labels = Tensor(np.array([1, 0, 0]))
+    loss = cross_entropy(logits, labels)
+    assert np.isclose(1.16292556, loss.elems)
+
+
+def test_cross_entropy_backward():
+    logits = Tensor(np.array([[4, 3], [5, 6], [10, 5]]))
+    labels = Tensor(np.array([0, 0, 1]))
+    loss = CrossEntropy.backward(logits, labels, 0)
+    assert np.allclose(np.array([[-0.0896471406, 0.08964714046], [-0.2436861929, 0.2436861929], [0.331102383, -0.331102383]]), loss)
+
+
+def test_linear_forward():
+    weight_tensor = Tensor(np.array([[1, 2], [3, 4]]))
+    vec_tensor = Tensor(np.array([[5, 7], [6, 8]]))
+    output = Linear.forward(weight_tensor, vec_tensor)
+    assert np.allclose(output, np.array([[19, 43], [22, 50]]))
+
+
+def test_linear_backward():
+    weight_tensor = Tensor(np.array([[1, 2], [3, 4]]))
+    vec_tensor = Tensor(np.array([[5, 7], [6, 8]]))
+    weight_derriv = Linear.backward(weight_tensor, vec_tensor, 0)
+    vec_derriv = Linear.backward(weight_tensor, vec_tensor, 1)
+    correct_weight_derriv = np.array([[[[5, 7], [0, 0]], [[0, 0], [5, 7]]], [[[6, 8], [0, 0]], [[0, 0], [6, 8]]]])
+    correct_vec_derriv = np.array([[[[1, 2], [0, 0]], [[3, 4], [0, 0]]], [[[0, 0], [1, 2]], [[0, 0], [3, 4]]]])
+    assert np.allclose(weight_derriv, correct_weight_derriv)
+    assert np.allclose(vec_derriv, correct_vec_derriv)

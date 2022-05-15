@@ -1,3 +1,4 @@
+from multiprocessing.sharedctypes import Value
 import numpy as np
 
 from src.RGrad.tensor import Tensor
@@ -78,3 +79,63 @@ class Mean:
 
 def mean(a):
     return Tensor(Mean.forward(a), (a,), Mean)
+
+
+class CrossEntropy:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(logits, labels):
+        B = logits.shape[0]
+        loss = 0
+        for i in range(B):
+            label = labels.elems[i]
+            vec = logits.elems[i, :]
+            loss -= vec[label] - np.log(sum(np.exp(vec - max(vec)))) - max(vec)
+        return loss/B
+
+    @staticmethod
+    def backward(logits, labels, index):
+        B = logits.shape[0]
+        if index == 0:
+            derriv_array = np.exp(logits.elems)
+            print(derriv_array)
+            derriv_array = np.divide(derriv_array, np.reshape(np.sum(derriv_array, 1), [len(derriv_array), 1]))
+            for i in range(len(labels.elems)):
+                derriv_array[i][labels.elems[i]] -= 1
+            derriv_array /= B
+            return derriv_array
+        elif index == 1:
+            return None
+        else:
+            raise ValueError(f'invalid index passed to backwards method: {index}')
+
+
+def cross_entropy(logits, labels):
+    return Tensor(CrossEntropy.forward(logits, labels), (logits, labels), CrossEntropy)
+
+
+class Linear:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(weight_tensor, vector_tensor):
+        return np.matmul(vector_tensor.elems, np.transpose(weight_tensor.elems))
+
+    @staticmethod
+    def backward(weight_tensor, vector_tensor, index):
+        vector_tensor_transposed = Tensor(np.transpose(vector_tensor.elems))
+        if index == 0:
+            return np.transpose(Matmul.backward(weight_tensor, vector_tensor_transposed, 0), [1, 0, 2, 3])
+        elif index == 1:
+            return np.transpose(Matmul.backward(weight_tensor, vector_tensor_transposed, 1), [1, 0, 3, 2])
+        else:
+            raise ValueError(f'invalid index: {index}')
+
+
+def linear(weight_tensor, vector_tensor):
+    return Tensor(Linear.forward(weight_tensor, vector_tensor), (weight_tensor, vector_tensor), Linear)

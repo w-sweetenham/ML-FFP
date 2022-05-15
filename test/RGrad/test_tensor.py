@@ -53,4 +53,17 @@ def test_backward():
     assert np.allclose(tensor3.grad_array, np.array([[0.25, 0.25], [0.25, 0.25]]))
     assert np.allclose(tensor1.grad_array, np.array([[2.75, 3.75], [2.75, 3.75]]))
     assert np.allclose(tensor2.grad_array, np.array([[1, 1], [1.5, 1.5]]))
-    assert tensor2.grad_array.shape == (2, 2)
+
+def test_zero_grad():
+    tensor1 = Tensor(np.array([[1, 2], [3, 4]]))
+    tensor2 = Tensor(np.array([[5, 6], [7, 8]]))
+    tensor3 = matmul(tensor1, tensor2)
+    tensor4 = mean(tensor1)
+    tensor5 = mean(tensor3)
+    tensor5.backward()
+    tensor5.zero_grads()
+    assert tensor4.grad_array is None
+    assert np.allclose(tensor5.grad_array, np.array(0))
+    assert np.allclose(tensor3.grad_array, np.array([[0, 0], [0, 0]]))
+    assert np.allclose(tensor1.grad_array, np.array([[0, 0], [0, 0]]))
+    assert np.allclose(tensor2.grad_array, np.array([[0, 0], [0, 0]]))

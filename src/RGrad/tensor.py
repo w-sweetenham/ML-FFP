@@ -79,5 +79,30 @@ class Tensor:
                 gradients_added[tensor_index] = tensor
             gradients_known = new_gradients_known
 
+    def zero_grads(self):
+        meta_graph_nodes = {}
+
+        child_nodes = {self.tensor_index: self}
+        parent_nodes = {}
+        count = 0
+        while count < 10000:
+            for tensor_index, child_node in child_nodes.items():
+                meta_graph_nodes[tensor_index] = child_node
+                if child_node.parents is not None:
+                    for parent_node in child_node.parents:
+                        parent_nodes[parent_node.tensor_index] = parent_node
+            if len(parent_nodes) == 0:
+                break
+            child_nodes = parent_nodes
+            parent_nodes = {}
+            count += 1
+        if count == 10000:
+            raise RuntimeError('all 10000 iterations used in building meta-graph')
+
+        for tensor_index, tensor in meta_graph_nodes.items():
+            tensor.grad_array = np.zeros(tensor.shape)
+            
+
+
 
                         
