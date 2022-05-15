@@ -15,6 +15,9 @@ class Tensor:
         self.grad_array = None
         tensor_index += 1
 
+    def copy(self):
+        return Tensor(np.copy(self.elems))
+
     def get_meta_graph(self):
         meta_graph = {}
         meta_graph_nodes = {}
