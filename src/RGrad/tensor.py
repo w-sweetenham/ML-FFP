@@ -51,6 +51,8 @@ class Tensor:
         parent_tensor = self.parents[index]
         derriv_array = np.zeros(parent_tensor.shape)
         backward_tensor = self.function.backward(*self.parents, index)
+        if backward_tensor is None:
+            return
         for index in np.ndindex(self.shape):
             derriv_array += self.grad_array[index]*backward_tensor[index]
         if parent_tensor.grad_array is None:

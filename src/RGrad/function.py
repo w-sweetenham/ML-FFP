@@ -101,7 +101,6 @@ class CrossEntropy:
         B = logits.shape[0]
         if index == 0:
             derriv_array = np.exp(logits.elems)
-            print(derriv_array)
             derriv_array = np.divide(derriv_array, np.reshape(np.sum(derriv_array, 1), [len(derriv_array), 1]))
             for i in range(len(labels.elems)):
                 derriv_array[i][labels.elems[i]] -= 1
