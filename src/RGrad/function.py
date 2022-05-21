@@ -3,7 +3,7 @@ import numpy as np
 
 from src.RGrad.tensor import Tensor
 
-class Matmul:
+class MatmulFunction:
 
     def __init__(self):
         pass
@@ -33,10 +33,10 @@ class Matmul:
 
 
 def matmul(a, b):
-    return Tensor(Matmul.forward(a, b), (a, b), Matmul)
+    return Tensor(MatmulFunction.forward(a, b), (a, b), MatmulFunction)
 
 
-class ReLU:
+class ReLUFunction:
 
     def __init__(self):
         pass
@@ -57,18 +57,18 @@ class ReLU:
         return derriv_array
 
 
-def relu(a):
-    return Tensor(ReLU.forward(a), (a,), ReLU)
+def ReLUFunction(a):
+    return Tensor(ReLUFunction.forward(a), (a,), ReLUFunction)
 
 
-class Mean:
+class MeanFunction:
 
     def __init__(self):
         pass
 
     @staticmethod
     def forward(a):
-        return np.mean(a.elems)
+        return np.MeanFunction(a.elems)
 
     @staticmethod
     def backward(a, index):
@@ -77,11 +77,11 @@ class Mean:
         return np.ones(a.shape)/a.elems.size
 
 
-def mean(a):
-    return Tensor(Mean.forward(a), (a,), Mean)
+def MeanFunction(a):
+    return Tensor(MeanFunction.forward(a), (a,), MeanFunction)
 
 
-class CrossEntropy:
+class CrossEntropyFunction:
 
     def __init__(self):
         pass
@@ -113,10 +113,10 @@ class CrossEntropy:
 
 
 def cross_entropy(logits, labels):
-    return Tensor(CrossEntropy.forward(logits, labels), (logits, labels), CrossEntropy)
+    return Tensor(CrossEntropyFunction.forward(logits, labels), (logits, labels), CrossEntropyFunction)
 
 
-class Linear:
+class LinearFunction:
 
     def __init__(self):
         pass
@@ -129,12 +129,12 @@ class Linear:
     def backward(weight_tensor, vector_tensor, index):
         vector_tensor_transposed = Tensor(np.transpose(vector_tensor.elems))
         if index == 0:
-            return np.transpose(Matmul.backward(weight_tensor, vector_tensor_transposed, 0), [1, 0, 2, 3])
+            return np.transpose(MatmulFunction.backward(weight_tensor, vector_tensor_transposed, 0), [1, 0, 2, 3])
         elif index == 1:
-            return np.transpose(Matmul.backward(weight_tensor, vector_tensor_transposed, 1), [1, 0, 3, 2])
+            return np.transpose(MatmulFunction.backward(weight_tensor, vector_tensor_transposed, 1), [1, 0, 3, 2])
         else:
             raise ValueError(f'invalid index: {index}')
 
 
-def linear(weight_tensor, vector_tensor):
-    return Tensor(Linear.forward(weight_tensor, vector_tensor), (weight_tensor, vector_tensor), Linear)
+def LinearFunction(weight_tensor, vector_tensor):
+    return Tensor(LinearFunction.forward(weight_tensor, vector_tensor), (weight_tensor, vector_tensor), LinearFunction)
