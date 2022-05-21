@@ -68,7 +68,7 @@ class MeanFunction:
 
     @staticmethod
     def forward(a):
-        return np.MeanFunction(a.elems)
+        return np.mean(a.elems)
 
     @staticmethod
     def backward(a, index):
