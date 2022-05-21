@@ -1,2 +1,5 @@
 __pycache__/
 scratchpad/
+
+mnist_test.csv
+mnist_train.csv
