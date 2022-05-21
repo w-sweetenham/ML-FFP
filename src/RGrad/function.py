@@ -57,7 +57,7 @@ class ReLUFunction:
         return derriv_array
 
 
-def ReLUFunction(a):
+def relu(a):
     return Tensor(ReLUFunction.forward(a), (a,), ReLUFunction)
 
 
@@ -77,7 +77,7 @@ class MeanFunction:
         return np.ones(a.shape)/a.elems.size
 
 
-def MeanFunction(a):
+def mean(a):
     return Tensor(MeanFunction.forward(a), (a,), MeanFunction)
 
 
@@ -136,5 +136,5 @@ class LinearFunction:
             raise ValueError(f'invalid index: {index}')
 
 
-def LinearFunction(weight_tensor, vector_tensor):
+def linear(weight_tensor, vector_tensor):
     return Tensor(LinearFunction.forward(weight_tensor, vector_tensor), (weight_tensor, vector_tensor), LinearFunction)
