@@ -1,6 +1,5 @@
 from re import A
 import numpy as np
-from torch import cross
 
 from src.RGrad.tensor import Tensor
 from src.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction
