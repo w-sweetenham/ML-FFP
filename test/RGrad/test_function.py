@@ -1,8 +1,9 @@
+from email.mime import image
 from re import A
 import numpy as np
 
 from src.RGrad.tensor import Tensor
-from src.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction
+from src.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten
 
 
 def test_matmul_forward():
@@ -92,3 +93,9 @@ def test_linear_backward():
     correct_vec_derriv = np.array([[[[1, 2], [0, 0]], [[3, 4], [0, 0]]], [[[0, 0], [1, 2]], [[0, 0], [3, 4]]]])
     assert np.allclose(weight_derriv, correct_weight_derriv)
     assert np.allclose(vec_derriv, correct_vec_derriv)
+
+
+def test_flatten_forward():
+    image_tensor = Tensor(np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]))
+    flattened_array = Flatten.forward(image_tensor)
+    assert np.all(flattened_array == np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]]))

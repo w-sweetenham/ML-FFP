@@ -138,3 +138,24 @@ class LinearFunction:
 
 def linear(weight_tensor, vector_tensor):
     return Tensor(LinearFunction.forward(weight_tensor, vector_tensor), (weight_tensor, vector_tensor), LinearFunction)
+
+
+class Flatten:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(image_tensor):
+        return np.reshape(image_tensor.elems, (image_tensor.shape[0], image_tensor.shape[1]*image_tensor.shape[2]))
+
+    @staticmethod
+    def backward(image_tensor, index):
+        if index != 0:
+            raise ValueError(f'invalid index: {index}')
+        derriv_array = np.zeros([image_tensor.shape[0], image_tensor.shape[1]*image_tensor.shape[2]] + list(image_tensor.shape))
+        for batch_index in range(image_tensor.shape[0]):
+            for flattened_index in range(image_tensor.shape[1]*image_tensor.shape[2]):
+                image_row = flattened_index // image_tensor.shape[2]
+                image_col = flattened_index % image_tensor.shape[2]
+                derriv_array[batch_index][flattened_index][batch_index][image_row][image_col]
