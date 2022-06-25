@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.RGrad.tensor import Tensor
+from src.deep_learning.RGrad.tensor import Tensor
 
 
 class LabelledDataset:

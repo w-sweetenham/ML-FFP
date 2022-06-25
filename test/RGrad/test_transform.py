@@ -1,8 +1,8 @@
 import numpy as np
-from src.RGrad.function import mean
+from src.deep_learning.RGrad.function import mean
 
-from src.RGrad.tensor import Tensor
-from src.RGrad.transform import Linear, ReLUBlock
+from src.deep_learning.RGrad.tensor import Tensor
+from src.deep_learning.RGrad.transform import Linear, ReLUBlock
 
 
 def test_linear():

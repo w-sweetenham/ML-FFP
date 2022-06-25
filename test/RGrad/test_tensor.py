@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.RGrad.tensor import Tensor
-from src.RGrad.function import matmul, relu, mean
+from src.deep_learning.RGrad.tensor import Tensor
+from src.deep_learning.RGrad.function import matmul, relu, mean
 
 
 def test_tensor():

@@ -2,8 +2,8 @@ from email.mime import image
 from re import A
 import numpy as np
 
-from src.RGrad.tensor import Tensor
-from src.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten
+from src.deep_learning.RGrad.tensor import Tensor
+from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten
 
 
 def test_matmul_forward():

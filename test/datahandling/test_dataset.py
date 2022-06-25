@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from src.datahandling.dataset import CSVImageDataset, DataLoader
+from src.deep_learning.datahandling.dataset import CSVImageDataset, DataLoader
 
 
 def test_csv_image_dataset():
