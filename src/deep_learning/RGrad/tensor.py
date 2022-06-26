@@ -1,4 +1,3 @@
-from multiprocessing.sharedctypes import Value
 import numpy as np
 
 tensor_index = 0

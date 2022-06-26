@@ -1,7 +1,7 @@
 import numpy as np
 
-from src.RGrad.function import linear, relu
-from src.RGrad.tensor import Tensor
+from src.deep_learning.RGrad.function import linear, relu
+from src.deep_learning.RGrad.tensor import Tensor
 
 
 class Param:
