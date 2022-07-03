@@ -3,3 +3,5 @@ scratchpad/
 
 mnist_test.csv
 mnist_train.csv
+
+.ipynb_checkpoints/
