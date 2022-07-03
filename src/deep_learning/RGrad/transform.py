@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.deep_learning.RGrad.function import linear, relu
+from src.deep_learning.RGrad.function import flatten, linear, relu
 from src.deep_learning.RGrad.tensor import Tensor
 
 
@@ -40,3 +40,12 @@ class ReLUBlock(Transform):
     
     def __call__(self, inpt):
         return relu(self.linear_transform(inpt))
+
+
+class Flatten(Transform):
+
+    def __init__(self):
+        pass
+    
+    def __call__(self, inpt):
+        return flatten(inpt)
