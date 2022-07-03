@@ -99,3 +99,18 @@ def test_flatten_forward():
     image_tensor = Tensor(np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]]))
     flattened_array = Flatten.forward(image_tensor)
     assert np.all(flattened_array == np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]]))
+
+
+def test_flatten_backward():
+    image_tensor = Tensor(np.array([[[1, 2], [4, 5]], [[7, 8], [11, 12]]]))
+    flattened_image = Flatten.forward(image_tensor)
+    grad_array = Flatten.backward(image_tensor, 0)
+    non_zero_positions = [(0, 0, 0, 0, 0), (0, 1, 0, 0, 1), (0, 2, 0, 1, 0), (0, 3, 0, 1, 1),
+                          (1, 0, 1, 0, 0), (1, 1, 1, 0, 1), (1, 2, 1, 1, 0), (1, 3, 1, 1, 1)]
+    assert grad_array.shape == (2, 4, 2, 2, 2)
+    for index in np.ndindex(grad_array.shape):
+        if index in non_zero_positions:
+            assert np.isclose(grad_array[index], 1.0)
+        else:
+            assert np.isclose(grad_array[index], 0.0)
+    

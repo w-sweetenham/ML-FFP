@@ -53,7 +53,7 @@ class ReLUFunction:
         derriv_array = np.zeros(result_size + result_size)
         for index in np.ndindex(a.shape):
             if a.elems[index] > 0:
-                derriv_array[index, index] = 1
+                derriv_array[index][index] = 1
         return derriv_array
 
 
@@ -158,4 +158,9 @@ class Flatten:
             for flattened_index in range(image_tensor.shape[1]*image_tensor.shape[2]):
                 image_row = flattened_index // image_tensor.shape[2]
                 image_col = flattened_index % image_tensor.shape[2]
-                derriv_array[batch_index][flattened_index][batch_index][image_row][image_col]
+                derriv_array[batch_index][flattened_index][batch_index][image_row][image_col] = 1.0
+        return derriv_array
+
+
+def flatten(tensor):
+    return Tensor(Flatten.forward(tensor), (tensor,), Flatten)
