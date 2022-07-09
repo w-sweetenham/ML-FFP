@@ -1,4 +1,5 @@
 from multiprocessing.sharedctypes import Value
+from tkinter import image_names
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
@@ -198,3 +199,35 @@ class Add:
 
 def add(tensor1, tensor2):
     return Tensor(Add.forward(tensor1, tensor2), (tensor1, tensor2), Add)
+
+
+class Conv2d:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(images_tensor, kernels_tensor):
+        batch_size = images_tensor.shape[0]
+        num_kernels = kernels_tensor.shape[0]
+        depth = images_tensor.shape[3]
+        num_image_rows = images_tensor.shape[1]
+        num_image_cols = images_tensor.shape[2]
+        num_kernel_rows = kernels_tensor.shape[1]
+        num_kernel_cols = kernels_tensor.shape[2]
+        if depth != kernels_tensor.shape[3]:
+            raise ValueError(f'image depth doesn\'t match kernel depth: {depth} vs {kernels_tensor.shape[3]}')
+        output_array = np.array((batch_size, num_image_rows-num_kernel_rows, num_image_cols-num_kernel_cols, num_kernels))
+        for batch_index in range(batch_size):
+            for output_row_index in range(num_image_rows-num_kernel_rows):
+                for output_col_index in range(num_image_cols-num_kernel_cols):
+                    for kernel_index in range(num_kernels):
+                        elem_val = 0
+                        for image_row_index in range(output_row_index, output_row_index+num_kernel_rows):
+                            kernel_row_index = image_row_index - output_row_index
+                            for image_col_index in range(output_col_index, output_col_index+num_kernel_cols):
+                                kernel_col_index = image_col_index - output_col_index
+                                for depth_index in range(depth):
+                                    elem_value += images_tensor.elems[batch_index][image_row_index][image_col_index][depth_index]*kernels_tensor[kernel_index][kernel_row_index][kernel_col_index]
+                        output_array[batch_index][output_row_index][output_col_index][kernel_index] = elem_val
+        return output_array
