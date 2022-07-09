@@ -26,8 +26,16 @@ class Transform:
 
 class Linear(Transform):
 
-    def __init__(self, input_size, output_size):
-        self.weight_param = Param(Tensor(np.random.normal(loc=0, scale=1, size=(output_size, input_size))))
+    def __init__(self, input_size, output_size, initialization='xavier'):
+        if initialization == 'xavier':
+            init_weights = np.random.uniform(-1/(input_size**0.5), 1/(input_size**0.5), size=(output_size, input_size))
+        elif initialization == 'normalized_xavier':
+            init_weights = np.random.uniform(-((6**0.5)/(input_size + output_size)**0.5), ((6**0.5)/(input_size + output_size)**0.5), size=(output_size, input_size))
+        elif initialization  == 'he':
+            init_weights = np.random.normal(loc=0, scale=2/(input_size**0.5), size=(output_size, input_size))
+        else:
+            raise ValueError(f'invalid initialization specified: {initialization}')
+        self.weight_param = Param(Tensor(init_weights))
 
     def __call__(self, inpt):
         return linear(self.weight_param.tensor, inpt)
@@ -36,7 +44,7 @@ class Linear(Transform):
 class ReLUBlock(Transform):
 
     def __init__(self, input_size, output_size):
-        self.linear_transform = Linear(input_size, output_size)
+        self.linear_transform = Linear(input_size, output_size, initialization='he')
     
     def __call__(self, inpt):
         return relu(self.linear_transform(inpt))
