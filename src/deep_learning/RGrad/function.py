@@ -173,16 +173,27 @@ class Add:
 
     @staticmethod
     def forward(tensor1, tensor2):
-        return tensor1.elems + tensor2.elems
+        new_array = np.copy(tensor1.elems)
+        for n in range(len(new_array)):
+            for index in np.ndindex(new_array.shape[1:]):
+                new_array[n][index] += tensor2.elems[index]
+        return new_array
 
     @staticmethod
     def backward(tensor1, tensor2, index):
-        if index not in {0, 1}:
+        if index == 0:
+            derriv_array = np.zeros(tensor1.shape + tensor1.shape)
+            for array_index in np.ndindex(tensor1.shape):
+                derriv_array[array_index][array_index] = 1
+            return derriv_array
+        elif index == 1:
+            derriv_array = np.zeros(tensor1.shape + tensor2.shape)
+            for array_index in np.ndindex(tensor1.shape):
+                tensor2_index = array_index[1:]
+                derriv_array[array_index][tensor2_index] = 1
+            return derriv_array
+        else:
             raise ValueError(f'invalid index: {index}')
-        derriv_array = np.zeros(tensor1.shape + tensor1.shape)
-        for array_index in np.ndindex(tensor1.shape):
-            derriv_array[array_index][array_index] = 1
-        return derriv_array
 
 
 def add(tensor1, tensor2):

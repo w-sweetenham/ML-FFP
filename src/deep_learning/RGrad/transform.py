@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.deep_learning.RGrad.function import flatten, linear, relu
+from src.deep_learning.RGrad.function import flatten, linear, relu, add
 from src.deep_learning.RGrad.tensor import Tensor
 
 
@@ -36,9 +36,10 @@ class Linear(Transform):
         else:
             raise ValueError(f'invalid initialization specified: {initialization}')
         self.weight_param = Param(Tensor(init_weights))
+        self.bias_param = Param(Tensor(np.zeros(output_size)))
 
     def __call__(self, inpt):
-        return linear(self.weight_param.tensor, inpt)
+        return add(linear(self.weight_param.tensor, inpt), self.bias_param.tensor)
 
 
 class ReLUBlock(Transform):
