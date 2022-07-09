@@ -3,7 +3,7 @@ from re import A
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
-from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten
+from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add
 
 
 def test_matmul_forward():
@@ -113,4 +113,21 @@ def test_flatten_backward():
             assert np.isclose(grad_array[index], 1.0)
         else:
             assert np.isclose(grad_array[index], 0.0)
+
+
+def test_add_forward():
+    tensor1 = Tensor(np.array([[1, 2], [3, 4]]))
+    tensor2 = Tensor(np.array([[5, 6], [7, 8]]))
+    tensor3_elems = Add.forward(tensor1, tensor2)
+    assert np.all(tensor3_elems == np.array([[6, 8], [10, 12]]))
+
+
+def test_add_backward():
+    tensor1 = Tensor(np.array([[1, 2], [3, 4]]))
+    tensor2 = Tensor(np.array([[5, 6], [7, 8]]))
+    backward_tensor0 = Add.backward(tensor1, tensor2, 0)
+    backward_tensor1 = Add.backward(tensor1, tensor2, 1)
+    derriv_array_correct = np.array([[[[1, 0], [0, 0]], [[0, 1], [0, 0]]], [[[0, 0], [1, 0]], [[0, 0], [0, 1]]]])
+    assert np.all(backward_tensor0 == derriv_array_correct)
+    assert np.all(backward_tensor1 == derriv_array_correct)
     

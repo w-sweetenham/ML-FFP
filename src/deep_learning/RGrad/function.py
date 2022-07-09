@@ -164,3 +164,26 @@ class Flatten:
 
 def flatten(tensor):
     return Tensor(Flatten.forward(tensor), (tensor,), Flatten)
+
+
+class Add:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def forward(tensor1, tensor2):
+        return tensor1.elems + tensor2.elems
+
+    @staticmethod
+    def backward(tensor1, tensor2, index):
+        if index not in {0, 1}:
+            raise ValueError(f'invalid index: {index}')
+        derriv_array = np.zeros(tensor1.shape + tensor1.shape)
+        for array_index in np.ndindex(tensor1.shape):
+            derriv_array[array_index][array_index] = 1
+        return derriv_array
+
+
+def add(tensor1, tensor2):
+    return Tensor(Add.forward(tensor1, tensor2), (tensor1, tensor2), Add)
