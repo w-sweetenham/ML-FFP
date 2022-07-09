@@ -9,7 +9,7 @@ class SGD:
 
     def update(self):
         for param in self.params:
-            param.elems += param.grad_array * self.lr
+            param.elems -= param.grad_array * self.lr
 
 
 class Momentum:

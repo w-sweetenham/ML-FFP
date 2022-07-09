@@ -12,7 +12,7 @@ def test_sgd():
     optimizer = SGD([tensor], 0.1)
     optimizer.update()
 
-    assert np.allclose(tensor.elems, np.array([1.06, 1.02]))
+    assert np.allclose(tensor.elems, np.array([0.94, 0.98]))
 
 
 def test_momentum():
@@ -21,9 +21,9 @@ def test_momentum():
     optimizer = Momentum([tensor], 0.8, 0.1)
     optimizer.update()
     
-    assert np.allclose(tensor.elems, np.array([1.016, 1.008]))
+    assert np.allclose(tensor.elems, np.array([0.984, 0.992]))
 
     tensor.grad_array = np.array([0.5, 0.7])
     optimizer.update()
 
-    assert np.allclose(tensor.elems, np.array([1.0388, 1.0284]))
+    assert np.allclose(tensor.elems, np.array([0.9612, 0.9716]))
