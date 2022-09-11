@@ -217,10 +217,10 @@ class Conv2d:
         num_kernel_cols = kernels_tensor.shape[2]
         if depth != kernels_tensor.shape[3]:
             raise ValueError(f'image depth doesn\'t match kernel depth: {depth} vs {kernels_tensor.shape[3]}')
-        output_array = np.array((batch_size, num_image_rows-num_kernel_rows, num_image_cols-num_kernel_cols, num_kernels))
+        output_array = np.zeros((batch_size, num_image_rows-num_kernel_rows+1, num_image_cols-num_kernel_cols+1, num_kernels))
         for batch_index in range(batch_size):
-            for output_row_index in range(num_image_rows-num_kernel_rows):
-                for output_col_index in range(num_image_cols-num_kernel_cols):
+            for output_row_index in range(num_image_rows-num_kernel_rows+1):
+                for output_col_index in range(num_image_cols-num_kernel_cols+1):
                     for kernel_index in range(num_kernels):
                         elem_val = 0
                         for image_row_index in range(output_row_index, output_row_index+num_kernel_rows):
@@ -228,6 +228,26 @@ class Conv2d:
                             for image_col_index in range(output_col_index, output_col_index+num_kernel_cols):
                                 kernel_col_index = image_col_index - output_col_index
                                 for depth_index in range(depth):
-                                    elem_value += images_tensor.elems[batch_index][image_row_index][image_col_index][depth_index]*kernels_tensor[kernel_index][kernel_row_index][kernel_col_index]
+                                    elem_val += images_tensor.elems[batch_index][image_row_index][image_col_index][depth_index]*kernels_tensor.elems[kernel_index][kernel_row_index][kernel_col_index][depth_index]
                         output_array[batch_index][output_row_index][output_col_index][kernel_index] = elem_val
         return output_array
+
+    @staticmethod
+    def backward(images_tensor, kernels_tensor, index):
+        batch_size = images_tensor.shape[0]
+        num_kernels = kernels_tensor.shape[0]
+        depth = images_tensor.shape[3]
+        num_image_rows = images_tensor.shape[1]
+        num_image_cols = images_tensor.shape[2]
+        num_kernel_rows = kernels_tensor.shape[1]
+        num_kernel_cols = kernels_tensor.shape[2]
+        output_size = (batch_size, num_image_rows-num_kernel_rows+1, num_image_cols-num_kernel_cols+1, num_kernels)
+        if index == 0:
+            derriv_array = np.zeros(output_size + images_tensor.shape)
+            for batch_num, output_row, output_col, kernel_num in np.ndindex(output_size):
+                output_pos = (batch_num, output_row, output_col, kernel_num)
+                for kernel_row, kernel_col, im_depth in np.ndindex((num_kernel_rows, num_kernel_cols, depth)):
+                    image_pos = (batch_num, output_row+kernel_row, output_col+kernel_col, im_depth)
+                    derriv_array[output_pos][image_pos] = kernels_tensor.elems[kernel_num][kernel_row][kernel_col][im_depth]
+
+

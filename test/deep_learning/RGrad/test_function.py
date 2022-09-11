@@ -1,9 +1,7 @@
-from email.mime import image
-from re import A
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
-from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add
+from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d
 
 
 def test_matmul_forward():
@@ -131,4 +129,13 @@ def test_add_backward():
     derriv_array1_correct = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 1]]])
     assert np.all(backward_array0 == derriv_array0_correct)
     assert np.all(backward_array1 == derriv_array1_correct)
-    
+
+
+def test_conv2d_forward():
+    images_tensor = Tensor(np.array([[[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]], [[[13, 14], [15, 16], [17, 18]], [[19, 20], [21, 22], [23, 24]]]]))
+    kernel_tensor = Tensor(np.array([[[[1, 2], [3, 4]], [[5, 6], [7, 8]]], [[[9, 10], [11, 12]], [[13, 14], [15, 16]]], [[[17, 18], [19, 20]], [[21, 22], [23, 24]]]]))
+    output_tensor = Conv2d.forward(images_tensor, kernel_tensor)
+    assert output_tensor.shape == (2, 1, 2, 3)
+    assert np.all(output_tensor[0][0][0] == np.array([256, 608, 960]))
+    assert np.all(output_tensor[1][0][1] == np.array([760, 2008, 3256]))
+     
