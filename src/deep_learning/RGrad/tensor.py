@@ -15,11 +15,27 @@ class Tensor:
         tensor_index += 1
 
     def copy(self):
+        """
+        Summary:
+            creates a new tensor with elements having the same value as this tensor
+        Returns:
+            Tensor: copy tensor
+        """
         return Tensor(np.copy(self.elems))
 
     def get_meta_graph(self):
-        meta_graph = {}
-        meta_graph_nodes = {}
+        """
+        Summary:
+            Computes a dictionary of {tensor_index: <number of children>, ...}
+
+        Raises:
+            RuntimeError: If the number of iterations building up the graph exceeds 10,000
+
+        Returns:
+            dict: python dictionary specifying the number of children each tensor in the graph has
+        """
+        meta_graph = {} # a dictionary storing the number of child nodes for each node in the graph
+        meta_graph_nodes = {} # a dictionary storing every node in the graph in the form {tensor_index: tensor}
 
         child_nodes = {self.tensor_index: self}
         parent_nodes = {}
@@ -47,6 +63,21 @@ class Tensor:
         return meta_graph
     
     def add_grad_contribution(self, index):
+        """
+        Summary:
+            assuming this tensor has a grad array of the partial derrivatives
+            of itself with respect to some scalar tensor i.e. self.grad_array
+            is not None, this computes the partial derrivatives of that scalar
+            tensor with respect to the parent at the specified index via this
+            tensor. This is done by computing the sum of the multiplications of
+            each element of the grad array of this tensor by the tensor of partial
+            derrivatives of the parent tensor with respect to the corresponding
+            element of this tensor.
+
+        Args:
+            index (int): index in self.parents of the parent tensor to add the
+            gradient contribution to.
+        """
         parent_tensor = self.parents[index]
         derriv_array = np.zeros(parent_tensor.shape)
         backward_tensor = self.function.backward(*self.parents, index)
@@ -60,6 +91,15 @@ class Tensor:
             parent_tensor.grad_array += derriv_array
     
     def backward(self):
+        """
+        Summary:
+            goes back through the graph of tensors from which this tensor is
+            created and computes the gradient tensors of each with respect to
+            this one.
+
+        Raises:
+            ValueError: if this tensor is not a scalar.
+        """
         if self.shape != ():
             raise ValueError('Tensor is not a scalar')
         self.grad_array = np.array(1)
@@ -84,6 +124,16 @@ class Tensor:
             gradients_known = new_gradients_known
 
     def zero_grads(self):
+        """
+        Summary:
+            sets all the gradient tensors of the tensors from which this tensor
+            was created to zeros of the same shape as the tensor. Will do this
+            for all tensors including those which currently have no grad
+            tensor.
+        Raises:
+            RuntimeError: If the nodes of the graph aren't computed within
+                10,000 iterations.
+        """
         meta_graph_nodes = {}
 
         child_nodes = {self.tensor_index: self}
