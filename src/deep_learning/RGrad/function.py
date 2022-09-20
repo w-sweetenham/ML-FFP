@@ -246,8 +246,24 @@ class Conv2d:
             derriv_array = np.zeros(output_size + images_tensor.shape)
             for batch_num, output_row, output_col, kernel_num in np.ndindex(output_size):
                 output_pos = (batch_num, output_row, output_col, kernel_num)
-                for kernel_row, kernel_col, im_depth in np.ndindex((num_kernel_rows, num_kernel_cols, depth)):
-                    image_pos = (batch_num, output_row+kernel_row, output_col+kernel_col, im_depth)
-                    derriv_array[output_pos][image_pos] = kernels_tensor.elems[kernel_num][kernel_row][kernel_col][im_depth]
+                for im_row in range(output_row, output_row + num_kernel_rows):
+                    for im_col in range(output_col, output_col + num_kernel_cols):
+                        for im_depth in range(depth):
+                            image_pos = (batch_num, im_row, im_col, im_depth)
+                            derriv_array[output_pos][image_pos] = kernels_tensor.elems[kernel_num][im_row-output_row][im_col-output_col][im_depth]
+            return derriv_array
+        elif index == 1:
+            derriv_array = np.zeros(output_size + kernels_tensor.shape)
+            for batch_num, output_row, output_col, kernel_num in np.ndindex(output_size):
+                output_pos = (batch_num, output_row, output_col, kernel_num)
+                for kernel_row in range(num_kernel_rows):
+                    for kernel_col in range(num_kernel_cols):
+                        for kernel_depth in range(depth):
+                            kernel_pos = (kernel_num, kernel_row, kernel_col, kernel_depth)
+                            derriv_array[output_pos][kernel_pos] = images_tensor.elems[batch_num][kernel_row+output_row][kernel_col+output_col][kernel_depth]
+            return derriv_array
 
+
+def conv2d(images_tensor, kernels_tensor):
+    return Tensor(Conv2d.forward(images_tensor, kernels_tensor), (images_tensor, kernels_tensor), Conv2d)
 

@@ -138,4 +138,17 @@ def test_conv2d_forward():
     assert output_tensor.shape == (2, 1, 2, 3)
     assert np.all(output_tensor[0][0][0] == np.array([256, 608, 960]))
     assert np.all(output_tensor[1][0][1] == np.array([760, 2008, 3256]))
-     
+
+
+def test_conv2d_backward():
+    images_tensor = Tensor(np.array([[[[1, 2], [3, 4], [5, 6]], [[7, 8], [9, 10], [11, 12]]], [[[13, 14], [15, 16], [17, 18]], [[19, 20], [21, 22], [23, 24]]]]))
+    kernel_tensor = Tensor(np.array([[[[1, 2], [3, 4]], [[5, 6], [7, 8]]], [[[9, 10], [11, 12]], [[13, 14], [15, 16]]], [[[17, 18], [19, 20]], [[21, 22], [23, 24]]]]))
+    
+    image_derriv_tensor = Conv2d.backward(images_tensor, kernel_tensor, 0)
+    assert image_derriv_tensor[0][0][0][1][0][0][0][0] == 9
+    assert image_derriv_tensor[0][0][0][1][0][1][0][0] == 13
+    assert image_derriv_tensor[0][0][0][1][0][0][1][1] == 12
+    
+    kernel_derriv_tensor = Conv2d.backward(images_tensor, kernel_tensor, 1)
+    assert kernel_derriv_tensor[1][0][1][0][0][0][0][0] == 15
+    assert kernel_derriv_tensor[1][0][1][0][0][1][1][1] == 24
