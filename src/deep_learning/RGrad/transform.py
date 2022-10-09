@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.deep_learning.RGrad.function import flatten, linear, relu, add
+from src.deep_learning.RGrad.function import conv2d, flatten, linear, relu, add
 from src.deep_learning.RGrad.tensor import Tensor
 
 
@@ -58,3 +58,23 @@ class Flatten(Transform):
     
     def __call__(self, inpt):
         return flatten(inpt)
+
+
+class Conv2D(Transform):
+
+    def __init__(self, num_kernels, num_kernel_rows, num_kernel_cols, depth, initialization='xavier'):
+        input_size = num_kernel_rows * num_kernel_cols * depth
+        output_size = 1.0
+        if initialization == 'xavier':
+            init_weights = np.random.uniform(-1/(input_size**0.5), 1/(input_size**0.5), size=(num_kernels, num_kernel_rows, num_kernel_cols, depth))
+        elif initialization == 'normalized_xavier':
+            init_weights = np.random.uniform(-((6**0.5)/(input_size + output_size)**0.5), ((6**0.5)/(input_size + output_size)**0.5), size=(num_kernels, num_kernel_rows, num_kernel_cols, depth))
+        elif initialization  == 'he':
+            init_weights = np.random.normal(loc=0, scale=2/(input_size**0.5), size=(num_kernels, num_kernel_rows, num_kernel_cols, depth))
+        else:
+            raise ValueError(f'invalid initialization specified: {initialization}')
+
+        self.kernels = Param(Tensor(init_weights))
+
+    def __call__(self, image_tensor):
+        return conv2d(image_tensor, self.kernels.tensor)
