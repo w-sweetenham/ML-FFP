@@ -1,5 +1,3 @@
-from multiprocessing.sharedctypes import Value
-from tkinter import image_names
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
@@ -267,3 +265,23 @@ class Conv2d:
 def conv2d(images_tensor, kernels_tensor):
     return Tensor(Conv2d.forward(images_tensor, kernels_tensor), (images_tensor, kernels_tensor), Conv2d)
 
+
+class AddDimension:
+
+    @staticmethod
+    def forward(tensor):
+        return np.expand_dims(np.copy(tensor.elems), len(tensor.shape))
+
+    @staticmethod
+    def backward(tensor, index):
+        if index != 0:
+            raise ValueError(f'invalid index: {index}')
+
+        derriv_array = np.zeros(tensor.shape + (1,) + tensor.shape)
+        for index in np.ndindex(tensor.shape):
+            derriv_array[index][0][index] = 1.0
+        return derriv_array
+
+
+def add_dimension(tensor):
+    return Tensor(AddDimension.forward(tensor), (tensor,), AddDimension)

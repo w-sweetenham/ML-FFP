@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
-from src.deep_learning.RGrad.function import MatmulFunction, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d
+from src.deep_learning.RGrad.function import AddDimension, MatmulFunction, add_dimension, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d
 
 
 def test_matmul_forward():
@@ -152,3 +152,20 @@ def test_conv2d_backward():
     kernel_derriv_tensor = Conv2d.backward(images_tensor, kernel_tensor, 1)
     assert kernel_derriv_tensor[1][0][1][0][0][0][0][0] == 15
     assert kernel_derriv_tensor[1][0][1][0][0][1][1][1] == 24
+
+
+def test_add_dimension_forward():
+    input_tensor = Tensor(np.array([[1, 2], [3, 4]]))
+    output_tensor = add_dimension(input_tensor)
+    assert output_tensor.shape == (2, 2, 1)
+    assert np.all(output_tensor.elems == np.array([[[1], [2]], [[3], [4]]]))
+
+
+def test_add_dimension_backward():
+    input_tensor = Tensor(np.array([[1, 2], [3, 4]]))
+    derriv_tensor = AddDimension.backward(input_tensor, 0)
+    assert derriv_tensor.shape == (2, 2, 1, 2, 2)
+    assert np.allclose(derriv_tensor[0][0][0], np.array([[1, 0], [0, 0]]))
+    assert np.allclose(derriv_tensor[0][1][0], np.array([[0, 1], [0, 0]]))
+    assert np.allclose(derriv_tensor[1][0][0], np.array([[0, 0], [1, 0]]))
+    assert np.allclose(derriv_tensor[1][1][0], np.array([[0, 0], [0, 1]]))
