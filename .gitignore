@@ -1,5 +1,6 @@
 __pycache__/
 scratchpad/
+.pytest_cache
 
 mnist_test.csv
 mnist_train.csv
