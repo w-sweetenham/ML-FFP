@@ -62,7 +62,7 @@ class Tensor:
         
         return meta_graph
     
-    def add_grad_contribution(self, index):
+    def add_grad_contribution(self, parent_index):
         """
         Summary:
             assuming this tensor has a grad array of the partial derrivatives
@@ -78,17 +78,20 @@ class Tensor:
             index (int): index in self.parents of the parent tensor to add the
             gradient contribution to.
         """
-        parent_tensor = self.parents[index]
-        derriv_array = np.zeros(parent_tensor.shape)
-        backward_tensor = self.function.backward(*self.parents, index)
-        if backward_tensor is None:
+        parent_tensor = self.parents[parent_index]
+        if not self.function.has_valid_backward(parent_index):
             return
-        for index in np.ndindex(self.shape):
-            derriv_array += self.grad_array[index]*backward_tensor[index]
+        summed_derriv_array = np.zeros(parent_tensor.shape)
+        for self_index, derriv_array in self.function.backward(*self.parents, parent_index):
+            if self_index is None: # Note, if self_index is None then we assume the output is a scalar
+                summed_derriv_array += derriv_array*self.grad_array
+            else:
+                summed_derriv_array += derriv_array*self.grad_array[self_index]
         if parent_tensor.grad_array is None:
-            parent_tensor.grad_array = derriv_array
+            parent_tensor.grad_array = summed_derriv_array
         else:
-            parent_tensor.grad_array += derriv_array
+            parent_tensor.grad_array += summed_derriv_array
+
     
     def backward(self):
         """

@@ -2,10 +2,8 @@ import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
 
-class MatmulFunction:
 
-    def __init__(self):
-        pass
+class MatmulFunction:
 
     @staticmethod
     def forward(a, b):
@@ -13,22 +11,28 @@ class MatmulFunction:
 
     @staticmethod
     def backward(a, b, return_index):
-        result_size = [a.shape[0], b.shape[1]]
+        result_size = (a.shape[0], b.shape[1])
         if return_index == 0:
-            a_derriv_array = np.zeros(result_size + [a.shape[0], a.shape[1]])
-            for i in range(result_size[0]):
-                for j in range(result_size[1]):
-                    for y in range(a.shape[1]):
-                        a_derriv_array[i][j][i][y] = b.elems[y][j]
-            return a_derriv_array
+            for output_index in np.ndindex(result_size):
+                derriv_array = np.zeros(a.shape)
+                output_row, output_col = output_index
+                derriv_array[output_row] = b.elems[:, output_col]
+                yield output_index, derriv_array
         elif return_index == 1:
-            b_derriv_array = np.zeros(result_size + [b.shape[0], b.shape[1]])
-            for i in range(result_size[0]):
-                for j in range(result_size[1]):
-                    for x in range(b.shape[0]):
-                        b_derriv_array[i][j][x][j] = a.elems[i][x]
-            return b_derriv_array
-        return
+            for output_index in np.ndindex(result_size):
+                output_row, output_col = output_index
+                derriv_array = np.zeros(b.shape)
+                derriv_array[:, output_col] = a.elems[output_row]
+                yield output_index, derriv_array
+        else:
+            raise ValueError(f'invalid return index: {return_index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        if index in {0, 1}:
+            return True
+        else:
+            return False
 
 
 def matmul(a, b):
@@ -36,9 +40,6 @@ def matmul(a, b):
 
 
 class ReLUFunction:
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def forward(a):
@@ -48,12 +49,15 @@ class ReLUFunction:
     def backward(a, index):
         if index != 0:
             raise ValueError('invalid index specified')
-        result_size = list(a.shape)
-        derriv_array = np.zeros(result_size + result_size)
-        for index in np.ndindex(a.shape):
-            if a.elems[index] > 0:
-                derriv_array[index][index] = 1
-        return derriv_array
+        for output_index in np.ndindex(a.shape):
+            derriv_array = np.zeros(a.shape)
+            if a.elems[output_index] >= 0.0:
+                derriv_array[output_index] = 1.0
+            yield output_index, derriv_array
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
 
 
 def relu(a):
@@ -61,9 +65,6 @@ def relu(a):
 
 
 class MeanFunction:
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def forward(a):
@@ -73,7 +74,11 @@ class MeanFunction:
     def backward(a, index):
         if index != 0:
             raise ValueError('invalid index specified')
-        return np.ones(a.shape)/a.elems.size
+        yield None, np.ones(a.shape)/a.elems.size
+    
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
 
 
 def mean(a):
@@ -81,9 +86,6 @@ def mean(a):
 
 
 class CrossEntropyFunction:
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def forward(logits, labels):
@@ -104,11 +106,15 @@ class CrossEntropyFunction:
             for i in range(len(labels.elems)):
                 derriv_array[i][labels.elems[i]] -= 1
             derriv_array /= B
-            return derriv_array
+            yield None, derriv_array
         elif index == 1:
             return None
         else:
             raise ValueError(f'invalid index passed to backwards method: {index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
 
 
 def cross_entropy(logits, labels):
@@ -117,22 +123,31 @@ def cross_entropy(logits, labels):
 
 class LinearFunction:
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def forward(weight_tensor, vector_tensor):
         return np.matmul(vector_tensor.elems, np.transpose(weight_tensor.elems))
 
     @staticmethod
     def backward(weight_tensor, vector_tensor, index):
-        vector_tensor_transposed = Tensor(np.transpose(vector_tensor.elems))
+        output_shape = (vector_tensor.shape[0], weight_tensor.shape[0])
         if index == 0:
-            return np.transpose(MatmulFunction.backward(weight_tensor, vector_tensor_transposed, 0), [1, 0, 2, 3])
+            for output_index in np.ndindex(output_shape):
+                output_row, output_col = output_index
+                derriv_array = np.zeros(weight_tensor.shape)
+                derriv_array[output_col] = vector_tensor.elems[output_row]
+                yield output_index, derriv_array
         elif index == 1:
-            return np.transpose(MatmulFunction.backward(weight_tensor, vector_tensor_transposed, 1), [1, 0, 3, 2])
+            for output_index in np.ndindex(output_shape):
+                output_row, output_col = output_index
+                derriv_array = np.zeros(vector_tensor.shape)
+                derriv_array[output_row] = weight_tensor.elems[output_col]
+                yield output_index, derriv_array
         else:
             raise ValueError(f'invalid index: {index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index in {0, 1}
 
 
 def linear(weight_tensor, vector_tensor):
@@ -140,9 +155,6 @@ def linear(weight_tensor, vector_tensor):
 
 
 class Flatten:
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def forward(image_tensor):
@@ -152,13 +164,18 @@ class Flatten:
     def backward(image_tensor, index):
         if index != 0:
             raise ValueError(f'invalid index: {index}')
-        derriv_array = np.zeros([image_tensor.shape[0], image_tensor.shape[1]*image_tensor.shape[2]] + list(image_tensor.shape))
-        for batch_index in range(image_tensor.shape[0]):
-            for flattened_index in range(image_tensor.shape[1]*image_tensor.shape[2]):
-                image_row = flattened_index // image_tensor.shape[2]
-                image_col = flattened_index % image_tensor.shape[2]
-                derriv_array[batch_index][flattened_index][batch_index][image_row][image_col] = 1.0
-        return derriv_array
+        output_shape = (image_tensor.shape[0], image_tensor.shape[1]*image_tensor.shape[2])
+        for output_index in np.ndindex(output_shape):
+            derriv_array = np.zeros(image_tensor.shape)
+            output_row, output_col = output_index
+            image_row = output_col // image_tensor.shape[2]
+            image_col = output_col % image_tensor.shape[2]
+            derriv_array[output_row][image_row][image_col] = 1
+            yield output_index, derriv_array
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
 
 
 def flatten(tensor):
@@ -167,32 +184,31 @@ def flatten(tensor):
 
 class Add:
 
-    def __init__(self):
-        pass
-
     @staticmethod
     def forward(tensor1, tensor2):
         new_array = np.copy(tensor1.elems)
-        for n in range(len(new_array)):
-            for index in np.ndindex(new_array.shape[1:]):
-                new_array[n][index] += tensor2.elems[index]
+        for batch_num, array in enumerate(new_array):
+            new_array[batch_num] += tensor2.elems
         return new_array
 
     @staticmethod
     def backward(tensor1, tensor2, index):
         if index == 0:
-            derriv_array = np.zeros(tensor1.shape + tensor1.shape)
-            for array_index in np.ndindex(tensor1.shape):
-                derriv_array[array_index][array_index] = 1
-            return derriv_array
+            for output_index in np.ndindex(tensor1.shape):
+                derriv_array = np.zeros(tensor1.shape)
+                derriv_array[output_index] = 1
+                yield output_index, derriv_array
         elif index == 1:
-            derriv_array = np.zeros(tensor1.shape + tensor2.shape)
-            for array_index in np.ndindex(tensor1.shape):
-                tensor2_index = array_index[1:]
-                derriv_array[array_index][tensor2_index] = 1
-            return derriv_array
+            for output_index in np.ndindex(tensor1.shape):
+                derriv_array = np.zeros(tensor2.shape)
+                derriv_array[output_index[1:]] = 1
+                yield output_index, derriv_array
         else:
             raise ValueError(f'invalid index: {index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index in {0 ,1}
 
 
 def add(tensor1, tensor2):
@@ -200,9 +216,6 @@ def add(tensor1, tensor2):
 
 
 class Conv2d:
-
-    def __init__(self):
-        pass
 
     @staticmethod
     def forward(images_tensor, kernels_tensor):
@@ -241,25 +254,29 @@ class Conv2d:
         num_kernel_cols = kernels_tensor.shape[2]
         output_size = (batch_size, num_image_rows-num_kernel_rows+1, num_image_cols-num_kernel_cols+1, num_kernels)
         if index == 0:
-            derriv_array = np.zeros(output_size + images_tensor.shape)
-            for batch_num, output_row, output_col, kernel_num in np.ndindex(output_size):
-                output_pos = (batch_num, output_row, output_col, kernel_num)
+            for output_index in np.ndindex(output_size):
+                derriv_array = np.zeros(images_tensor.shape)
+                batch_num, output_row, output_col, kernel_num = output_index
                 for im_row in range(output_row, output_row + num_kernel_rows):
                     for im_col in range(output_col, output_col + num_kernel_cols):
                         for im_depth in range(depth):
                             image_pos = (batch_num, im_row, im_col, im_depth)
-                            derriv_array[output_pos][image_pos] = kernels_tensor.elems[kernel_num][im_row-output_row][im_col-output_col][im_depth]
-            return derriv_array
+                            derriv_array[image_pos] = kernels_tensor.elems[kernel_num][im_row-output_row][im_col-output_col][im_depth]
+                yield output_index, derriv_array
         elif index == 1:
-            derriv_array = np.zeros(output_size + kernels_tensor.shape)
-            for batch_num, output_row, output_col, kernel_num in np.ndindex(output_size):
-                output_pos = (batch_num, output_row, output_col, kernel_num)
+            for output_index in np.ndindex(output_size):
+                derriv_array = np.zeros(kernels_tensor.shape)
+                batch_num, output_row, output_col, kernel_num = output_index
                 for kernel_row in range(num_kernel_rows):
                     for kernel_col in range(num_kernel_cols):
                         for kernel_depth in range(depth):
                             kernel_pos = (kernel_num, kernel_row, kernel_col, kernel_depth)
-                            derriv_array[output_pos][kernel_pos] = images_tensor.elems[batch_num][kernel_row+output_row][kernel_col+output_col][kernel_depth]
-            return derriv_array
+                            derriv_array[kernel_pos] = images_tensor.elems[batch_num][kernel_row+output_row][kernel_col+output_col][kernel_depth]
+                yield output_index, derriv_array
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index in {0 ,1}
 
 
 def conv2d(images_tensor, kernels_tensor):
@@ -277,10 +294,14 @@ class AddDimension:
         if index != 0:
             raise ValueError(f'invalid index: {index}')
 
-        derriv_array = np.zeros(tensor.shape + (1,) + tensor.shape)
-        for index in np.ndindex(tensor.shape):
-            derriv_array[index][0][index] = 1.0
-        return derriv_array
+        for output_index in np.ndindex(tensor.shape + (1,)):
+            derriv_array = np.zeros(tensor.shape)
+            derriv_array[output_index[:-1]] = 1
+            yield output_index, derriv_array
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
 
 
 def add_dimension(tensor):
