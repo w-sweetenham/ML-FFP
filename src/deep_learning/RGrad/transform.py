@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.deep_learning.RGrad.function import conv2d, flatten, linear, relu, add
+from src.deep_learning.RGrad.function import conv2d, flatten, linear, relu, add, pad
 from src.deep_learning.RGrad.tensor import Tensor
 
 
@@ -78,3 +78,12 @@ class Conv2D(Transform):
 
     def __call__(self, image_tensor):
         return conv2d(image_tensor, self.kernels.tensor)
+
+
+class Pad(Transform):
+
+    def __init__(self, pad_amount):
+        self.pad_tensor = Param(Tensor(np.array(pad_amount)))
+
+    def __call__(self, input_tensor):
+        return pad(input_tensor, self.pad_tensor.tensor)
