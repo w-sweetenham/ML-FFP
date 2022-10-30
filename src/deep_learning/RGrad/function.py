@@ -337,3 +337,7 @@ class Pad:
     @staticmethod
     def has_valid_backward(index):
         return index == 0
+
+    
+def pad(input_tensor, pad_tensor):
+    return Tensor(Pad.forward(input_tensor, pad_tensor), (input_tensor, pad_tensor), Pad)
