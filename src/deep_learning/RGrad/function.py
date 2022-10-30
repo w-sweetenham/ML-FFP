@@ -363,3 +363,7 @@ class Sigmoid:
     @staticmethod
     def has_valid_backward(index):
         return index == 0
+
+
+def sigmoid(input_tensor):
+    return Tensor(Sigmoid.forward(input_tensor), (input_tensor,), Sigmoid)
