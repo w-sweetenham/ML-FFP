@@ -341,3 +341,25 @@ class Pad:
     
 def pad(input_tensor, pad_tensor):
     return Tensor(Pad.forward(input_tensor, pad_tensor), (input_tensor, pad_tensor), Pad)
+
+
+class Sigmoid:
+
+    @staticmethod
+    def forward(input_tensor):
+        return 1/(1+np.exp(-1*input_tensor.elems))
+
+    @staticmethod
+    def backward(input_tensor, index):
+        if index == 0:
+            for output_index in np.ndindex(input_tensor.shape):
+                derriv_array = np.zeros_like(input_tensor.elems, dtype=float)
+                exponent = np.exp(-1*input_tensor.elems[output_index])
+                derriv_array[output_index] = exponent/(1+exponent)**2
+                yield output_index, derriv_array
+        else:
+            raise ValueError(f'invalid index: {index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0

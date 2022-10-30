@@ -1,7 +1,24 @@
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
-from src.deep_learning.RGrad.function import AddDimension, MatmulFunction, add_dimension, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d, Pad
+from src.deep_learning.RGrad.function import (
+    AddDimension, 
+    MatmulFunction, 
+    add_dimension, 
+    matmul, 
+    ReLUFunction, 
+    relu, 
+    MeanFunction, 
+    mean, 
+    cross_entropy, 
+    CrossEntropyFunction, 
+    LinearFunction, 
+    Flatten, 
+    Add, 
+    Conv2d, 
+    Pad,
+    Sigmoid
+)
 
 
 def test_matmul_forward():
@@ -242,3 +259,17 @@ def test_pad_backward():
         else:
             correct_derriv_array[output_index[0]][output_index[1]-pad_tensor.elems][output_index[2]-pad_tensor.elems] = 1
             assert np.all(derriv_array == correct_derriv_array)
+
+
+def test_sigmoid_forward():
+    input_tensor = Tensor(np.array([1, 2]))
+    output_array = Sigmoid.forward(input_tensor)
+    assert np.allclose(output_array, np.array([0.7310585786, 0.880797078]))
+
+def test_sigmoid_backward():
+    input_tensor = Tensor(np.array([1, 2]))
+    derriv_tensors = []
+    for output_index, derriv_tensor in Sigmoid.backward(input_tensor, 0):
+        derriv_tensors.append(derriv_tensor)
+    assert np.allclose(derriv_tensors[0], np.array([0.1966119332, 0]))
+    assert np.allclose(derriv_tensors[1], np.array([0, 0.1049935854]))
