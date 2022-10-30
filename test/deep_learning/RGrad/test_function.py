@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
-from src.deep_learning.RGrad.function import AddDimension, MatmulFunction, add_dimension, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d
+from src.deep_learning.RGrad.function import AddDimension, MatmulFunction, add_dimension, matmul, ReLUFunction, relu, MeanFunction, mean, cross_entropy, CrossEntropyFunction, LinearFunction, Flatten, Add, Conv2d, Pad
 
 
 def test_matmul_forward():
@@ -217,3 +217,28 @@ def test_add_dimension_backward():
     assert np.allclose(derriv_tensors[1], np.array([[0, 1], [0, 0]]))
     assert np.allclose(derriv_tensors[2], np.array([[0, 0], [1, 0]]))
     assert np.allclose(derriv_tensors[3], np.array([[0, 0], [0, 1]]))
+
+
+def test_pad_forward():
+    input_tensor = Tensor(np.array([[[1, 2, 3], [4, 5, 6]], [[6, 7, 8], [9, 10, 11]]]))
+    pad_tensor = Tensor(np.array(1))
+
+    correct_padded_tensor = np.zeros((2, 4, 5))
+    correct_padded_tensor[0][1] = np.array([0, 1, 2, 3, 0])
+    correct_padded_tensor[0][2] = np.array([0, 4, 5, 6, 0])
+    correct_padded_tensor[1][1] = np.array([0, 6, 7, 8, 0])
+    correct_padded_tensor[1][2] = np.array([0, 9, 10, 11, 0])
+    assert np.all(Pad.forward(input_tensor, pad_tensor) == correct_padded_tensor)
+
+
+def test_pad_backward():
+    input_tensor = Tensor(np.array([[[1, 2, 3], [4, 5, 6]], [[6, 7, 8], [9, 10, 11]]]))
+    pad_tensor = Tensor(np.array(1))
+
+    for output_index, derriv_array in Pad.backward(input_tensor, pad_tensor, 0):
+        correct_derriv_array = np.zeros((2, 2, 3))
+        if output_index[1] in {0, 3} or output_index[2] in {0, 4}:
+            assert np.all(derriv_array == correct_derriv_array)
+        else:
+            correct_derriv_array[output_index[0]][output_index[1]-pad_tensor.elems][output_index[2]-pad_tensor.elems] = 1
+            assert np.all(derriv_array == correct_derriv_array)

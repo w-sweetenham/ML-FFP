@@ -306,3 +306,34 @@ class AddDimension:
 
 def add_dimension(tensor):
     return Tensor(AddDimension.forward(tensor), (tensor,), AddDimension)
+
+
+class Pad:
+
+    @staticmethod
+    def forward(input_tensor, pad_size_tensor):
+        new_array = np.zeros((input_tensor.shape[0], input_tensor.shape[1]+(2*pad_size_tensor.elems), input_tensor.shape[2]+(2*pad_size_tensor.elems)))
+        new_array[:, pad_size_tensor.elems:input_tensor.shape[1]+pad_size_tensor.elems, pad_size_tensor.elems:input_tensor.shape[2]+pad_size_tensor.elems] = input_tensor.elems
+        return new_array
+
+    @staticmethod
+    def backward(input_tensor, pad_size_tensor, index):
+        if index == 0:
+            output_shape = (input_tensor.shape[0], input_tensor.shape[1]+(2*pad_size_tensor.elems), input_tensor.shape[2])
+            for output_index in np.ndindex(output_shape):
+                derriv_array = np.zeros_like(input_tensor.elems)
+                if (output_index[1] < pad_size_tensor.elems or
+                    output_index[1] >= input_tensor.shape[1] + pad_size_tensor.elems or
+                    output_index[2] < pad_size_tensor.elems or
+                    output_index[2] >= input_tensor.shape[2] + pad_size_tensor.elems):
+
+                    yield output_index, derriv_array
+                else:
+                    derriv_array[output_index[0]][output_index[1]-pad_size_tensor.elems][output_index[2]-pad_size_tensor.elems] = 1
+                    yield output_index, derriv_array
+        else:
+            raise ValueError(f'invalid index for backward pass: {index}')
+
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
