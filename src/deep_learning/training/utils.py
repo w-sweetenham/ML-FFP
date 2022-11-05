@@ -98,4 +98,4 @@ def prf(predictions, labels):
 
 
 def accuracy(predictions, labels):
-    return sum(np.argmax(predictions, axis=1) == labels)/len(labels)
+    return sum(np.argmax(predictions.elems, axis=1) == labels.elems)/len(labels)
