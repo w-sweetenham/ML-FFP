@@ -95,3 +95,7 @@ def prf(predictions, labels):
         f_score = (2*precision*recall)/(precision+recall+delta)
         scores[label] = {'precision': precision, 'recall': recall, 'f-score': f_score}
     return scores
+
+
+def accuracy(predictions, labels):
+    return sum(np.argmax(predictions, axis=1) == labels)/len(labels)

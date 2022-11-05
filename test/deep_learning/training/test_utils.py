@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.deep_learning.training.utils import val_score_reduction, prf
+from src.deep_learning.training.utils import val_score_reduction, prf, accuracy
 
 
 def test_val_score_reduction():
@@ -29,3 +29,10 @@ def test_prf():
     assert np.isclose(scores[1]['precision'], 1/2, atol=10**-4)
     assert np.isclose(scores[1]['recall'], 1/2, atol=10**-4)
     assert np.isclose(scores[1]['f-score'], 1/2, atol=10**-4)
+
+
+def test_accuracy():
+    predictions = np.array([[0.9, 0.1], [0.8, 0.2], [0.3, 0.7], [0.85, 0.15], [0.25, 0.75]])
+    labels = np.array([0, 1, 1, 0, 0])
+    acc = accuracy(predictions, labels)
+    assert np.isclose(acc, 0.6, atol=10**(-4))
