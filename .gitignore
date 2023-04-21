@@ -7,3 +7,5 @@ mnist_train.csv
 mnist_val.csv
 
 .ipynb_checkpoints/
+
+env/
