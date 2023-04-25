@@ -1,5 +1,3 @@
-from pickletools import optimize
-from tkinter import OptionMenu
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor

@@ -1,16 +1,60 @@
+"""module defining various mathematical operations on tensors. Each mathematical
+    operation defined has a class and a python function. The class defines 3
+    static methods: a forward method, a backward method and an index checking
+    method. The forward method accepts tensor objects of the input tensors and
+    returns a numpy array of the result of the operation applied to those
+    tensors. The backward method returns tensors of the partial derrivatives of
+    the output of the operation with respect to the input tensors. It takes as
+    input the same arguments as the forward method but in addition takes in a
+    return_index argument specifying which of the input tensors to take the
+    derrivates with respect to. It returns a generator object which iterates
+    through each position in the output tensor, returning the index of the
+    position and the tensor of partial derrivatives of that output element with
+    respect to the specified input. The third method checks whether a given
+    return index is valid i.e. whether it makes sense to return the derrivative
+    of the output wrt that element."""
 import numpy as np
 
 from src.deep_learning.RGrad.tensor import Tensor
 
 
 class MatmulFunction:
-
+    """
+    class representing the matrix multiplication function
+    """
     @staticmethod
     def forward(a, b):
+        """
+        forward pass of the matrix multiplication operation.
+
+        Args:
+            a (numpy array): first matrix
+            b (numpy array): second matrix
+
+        Returns:
+            numpy array: result of matrix multiplication of a and b
+        """
         return np.matmul(a.elems, b.elems)
 
     @staticmethod
     def backward(a, b, return_index):
+        """
+        backward pass of the matrix multiplication operation
+
+        Args:
+            a (numpy array): first input matrix
+            b (numpy array): second input matrix
+            return_index (int): 0 if desiring derrivative wrt a or 1 if
+                desiring derrivative wrt b
+
+        Raises:
+            ValueError: if return index is not 0 or 1
+
+        Yields:
+            tuple: tuple of numpy arrays of the index in the output tensor and
+                derrivative of the corresponding output element wrt the
+                specified input tensor
+        """
         result_size = (a.shape[0], b.shape[1])
         if return_index == 0:
             for output_index in np.ndindex(result_size):
@@ -29,24 +73,59 @@ class MatmulFunction:
 
     @staticmethod
     def has_valid_backward(index):
-        if index in {0, 1}:
-            return True
-        else:
-            return False
+        """
+        valid return index checking method for matrix multiplication 
+        """
+        return index in {0, 1}
 
 
 def matmul(a, b):
+    """
+    python function corresponding to the matrix multiplication operation
+
+    Args:
+        a (Tensor): tensor of first matrix
+        b (Tensor): tensor of second matrix
+
+    Returns:
+        Tensor: tensor result of multiplication
+    """
     return Tensor(MatmulFunction.forward(a, b), (a, b), MatmulFunction)
 
 
 class ReLUFunction:
+    """
+    class corresponding to the RELU operation
+    """
 
     @staticmethod
     def forward(a):
+        """
+        forward pass of the RELU operation
+
+        Args:
+            a (Tensor): tensor to apply operation to
+
+        Returns:
+            numpy array: numpy array of the resulting tensor
+        """
         return a.elems * (a.elems > 0)
 
     @staticmethod
     def backward(a, index):
+        """
+        backward pass of the RELU operation
+
+        Args:
+            a (Tensor): tensor of the input to the RELU oepration
+            index (int): should be 0
+
+        Raises:
+            ValueError: if index other than 0 given
+
+        Yields:
+            _type_: _description_
+        """
         if index != 0:
             raise ValueError('invalid index specified')
         for output_index in np.ndindex(a.shape):

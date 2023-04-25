@@ -1,3 +1,6 @@
 numpy
 pytest
 black
+notebook
+tqdm
+matplotlib

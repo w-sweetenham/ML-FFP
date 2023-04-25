@@ -1,5 +1,6 @@
 import numpy as np
 
+from src.deep_learning.RGrad.tensor import Tensor
 from src.deep_learning.training.utils import val_score_reduction, prf, accuracy
 
 
@@ -32,7 +33,7 @@ def test_prf():
 
 
 def test_accuracy():
-    predictions = np.array([[0.9, 0.1], [0.8, 0.2], [0.3, 0.7], [0.85, 0.15], [0.25, 0.75]])
-    labels = np.array([0, 1, 1, 0, 0])
+    predictions = Tensor(np.array([[0.9, 0.1], [0.8, 0.2], [0.3, 0.7], [0.85, 0.15], [0.25, 0.75]]))
+    labels = Tensor(np.array([0, 1, 1, 0, 0]))
     acc = accuracy(predictions, labels)
     assert np.isclose(acc, 0.6, atol=10**(-4))
