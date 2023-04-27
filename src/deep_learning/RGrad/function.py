@@ -250,6 +250,8 @@ class Flatten:
             image_row = output_col // image_tensor.shape[2]
             image_col = output_col % image_tensor.shape[2]
             derriv_array[output_row][image_row][image_col] = 1
+            if len(image_tensor.shape) == 4 and image_tensor.shape[3] == 1:
+                derriv_array = np.expand_dims(derriv_array, axis=3)
             yield output_index, derriv_array
 
     @staticmethod
@@ -446,3 +448,65 @@ class Sigmoid:
 
 def sigmoid(input_tensor):
     return Tensor(Sigmoid.forward(input_tensor), (input_tensor,), Sigmoid)
+
+
+class MaxPool:
+    @staticmethod
+    def forward(input_tensor, window_size_tensor):
+        num_rows = input_tensor.shape[1]
+        num_cols = input_tensor.shape[2]
+
+        window_row_indexes = [(n*window_size_tensor.elems, (n+1)*window_size_tensor.elems) for n in range(num_rows // window_size_tensor.elems)]
+        if window_row_indexes[-1][1] < num_rows:
+            window_row_indexes.append(((num_rows // window_size_tensor.elems)*window_size_tensor.elems, num_rows))
+
+        window_col_indexes = [(n*window_size_tensor.elems, (n+1)*window_size_tensor.elems) for n in range(num_cols // window_size_tensor.elems)]
+        if window_col_indexes[-1][1] < num_cols:
+            window_col_indexes.append(((num_cols // window_size_tensor.elems)*window_size_tensor.elems, num_cols))
+
+        output_array = np.empty((input_tensor.shape[0], len(window_row_indexes), len(window_col_indexes), input_tensor.shape[3]), dtype=np.float32)
+        for output_row_index, input_row_indexes in enumerate(window_row_indexes):
+            for output_col_index, input_col_indexes in enumerate(window_col_indexes):
+                start_row, end_row = input_row_indexes
+                start_col, end_col = input_col_indexes
+                output_array[:, output_row_index, output_col_index] = np.max(input_tensor.elems[:, start_row:end_row, start_col:end_col], axis=(1,2))
+        
+        return output_array
+    
+    @staticmethod
+    def backward(input_tensor, window_size_tensor, index):
+        if index != 0:
+            raise ValueError(f'invalid return index: {index}')
+        num_batches, num_rows, num_cols, num_channels = input_tensor.shape
+
+        window_row_indexes = [(n*window_size_tensor.elems, (n+1)*window_size_tensor.elems) for n in range(num_rows // window_size_tensor.elems)]
+        if window_row_indexes[-1][1] < num_rows:
+            window_row_indexes.append(((num_rows // window_size_tensor.elems)*window_size_tensor.elems, num_rows))
+
+        window_col_indexes = [(n*window_size_tensor.elems, (n+1)*window_size_tensor.elems) for n in range(num_cols // window_size_tensor.elems)]
+        if window_col_indexes[-1][1] < num_cols:
+            window_col_indexes.append(((num_cols // window_size_tensor.elems)*window_size_tensor.elems, num_cols))
+
+        for batch_index in range(num_batches):
+            for output_row, input_row_indexes in enumerate(window_row_indexes):
+                for output_col, input_col_indexes in enumerate(window_col_indexes):
+                    for channel in range(num_channels):
+                        start_row, end_row = input_row_indexes
+                        start_col, end_col = input_col_indexes
+                        input_slice = input_tensor.elems[batch_index, start_row:end_row, start_col:end_col, channel]
+                        row_size = end_col - start_col
+                        max_index_flat = np.argmax(input_slice)
+                        row_max_index = max_index_flat // row_size
+                        col_max_index = max_index_flat % row_size
+                        return_array = np.zeros(input_tensor.shape, dtype=np.float32)
+                        return_array[batch_index, start_row + row_max_index, start_col + col_max_index, channel] = 1.0
+                        output_index = (batch_index, output_row, output_col, channel)
+                        yield output_index, return_array
+        
+    @staticmethod
+    def has_valid_backward(index):
+        return index == 0
+    
+
+def max_pool(input_tensor, window_size_tensor):
+    return Tensor(MaxPool.forward(input_tensor, window_size_tensor), (input_tensor, window_size_tensor), MaxPool)

@@ -17,7 +17,8 @@ from src.deep_learning.RGrad.function import (
     Add, 
     Conv2d, 
     Pad,
-    Sigmoid
+    Sigmoid,
+    MaxPool
 )
 
 
@@ -273,3 +274,48 @@ def test_sigmoid_backward():
         derriv_tensors.append(derriv_tensor)
     assert np.allclose(derriv_tensors[0], np.array([0.1966119332, 0]))
     assert np.allclose(derriv_tensors[1], np.array([0, 0.1049935854]))
+
+def test_max_pool_forward():
+    input_tensor = Tensor(np.array([[[[0.8, 0.1], [0.1, 0.7], [0.4, 0.2]],
+                                    [[0.2, 0.6], [0.35, 0.4], [0.5, 0.8]],
+                                    [[0.4, 0.5], [0.7, 0.3], [0.5, 0.15]]],
+                                   [[[0.5, 0.2], [0.5, 0.4], [0.55, 0.6]],
+                                    [[0.8, 0.1], [0.7, 0.9], [0.5, 0.55]],
+                                    [[0.3, 0.1], [0.1, 0.5], [0.2, 0.4]]]]))
+    pooled_array = MaxPool.forward(input_tensor, Tensor(np.array(2)))
+    correct_pooled_array = np.array([[[[0.8, 0.7], [0.5, 0.8]],
+                                     [[0.7, 0.5], [0.5, 0.15]]],
+                                    [[[0.8, 0.9], [0.55, 0.6]],
+                                     [[0.3, 0.5], [0.2, 0.4]]]])
+    assert np.allclose(pooled_array, correct_pooled_array)
+
+def test_max_pool_backward():
+    input_tensor = Tensor(np.array([[[[0.8, 0.1], [0.1, 0.7], [0.4, 0.2]],
+                                    [[0.2, 0.6], [0.35, 0.4], [0.5, 0.8]],
+                                    [[0.4, 0.5], [0.7, 0.3], [0.5, 0.15]]],
+                                   [[[0.5, 0.2], [0.5, 0.4], [0.55, 0.6]],
+                                    [[0.8, 0.1], [0.7, 0.9], [0.5, 0.55]],
+                                    [[0.3, 0.1], [0.1, 0.5], [0.2, 0.4]]]]))
+    derriv_arrays = {}
+    for output_index, derriv_array in MaxPool.backward(input_tensor, Tensor(np.array(2)), 0):
+        derriv_arrays[output_index] = derriv_array
+
+    correct_derriv_array = np.zeros((2, 3, 3, 2), dtype=np.float32)
+    correct_derriv_array[0, 0, 0, 0] = 1.0
+    assert np.allclose(derriv_arrays[(0, 0, 0, 0)], correct_derriv_array)
+
+    correct_derriv_array = np.zeros((2, 3, 3, 2), dtype=np.float32)
+    correct_derriv_array[0, 2, 1, 0] = 1.0
+    assert np.allclose(derriv_arrays[(0, 1, 0, 0)], correct_derriv_array)
+
+    correct_derriv_array = np.zeros((2, 3, 3, 2), dtype=np.float32)
+    correct_derriv_array[0, 2, 2, 1] = 1.0
+    assert np.allclose(derriv_arrays[(0, 1, 1, 1)], correct_derriv_array)
+
+    correct_derriv_array = np.zeros((2, 3, 3, 2), dtype=np.float32)
+    correct_derriv_array[1, 1, 0, 0] = 1.0
+    assert np.allclose(derriv_arrays[(1, 0, 0, 0)], correct_derriv_array)
+
+    correct_derriv_array = np.zeros((2, 3, 3, 2), dtype=np.float32)
+    correct_derriv_array[1, 0, 2, 1] = 1.0
+    assert np.allclose(derriv_arrays[(1, 0, 1, 1)], correct_derriv_array)
