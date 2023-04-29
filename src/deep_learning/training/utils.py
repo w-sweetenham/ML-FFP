@@ -20,7 +20,7 @@ class Trainer:
             self.train_epoch(train_dataloader)
             train_loss, train_predictions, train_labels = self.compute_loss(train_dataloader, return_predictions=True)
             self.train_losses.append(train_loss)
-            self.train_scores.append(self.evaluate_fn(train_predictions, train_labels))
+            self.train_scores.append(self.evaluator_fn(train_predictions, train_labels))
             if val_dataloader is not None:
                 val_loss, val_predictions, val_labels = self.compute_loss(val_dataloader, return_predictions=True)
                 self.val_losses.append(val_loss)
